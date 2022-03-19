@@ -1,0 +1,1 @@
+# appimage2pkg
