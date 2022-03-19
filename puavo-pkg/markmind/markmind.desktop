@@ -1,0 +1,11 @@
+[Desktop Entry]
+Name=Mark Mind
+Exec=/usr/local/bin/markmind
+Terminal=false
+Type=Application
+Icon=/usr/share/pixmaps/markmind.png
+StartupWMClass=Mark Mind
+X-AppImage-Version=1.3.1
+Comment=an mind map and outliner software
+Categories=Utility;
+X-AppImage-Integrate=false

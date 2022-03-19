@@ -1,0 +1,3 @@
+#!/bin/sh
+export APPIMAGELAUNCHER_DISABLE=true
+/opt/xournalpp/xournalpp.AppImage

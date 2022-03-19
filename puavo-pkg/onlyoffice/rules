@@ -1,0 +1,39 @@
+#!/bin/sh
+
+set -eu
+
+command=$1
+shift
+
+case "$command" in
+  configure)
+    upstream_dir=$1
+    
+    ln -fns "$upstream_dir/onlyoffice" /opt/onlyoffice
+    ln -fns "$upstream_dir/onlyoffice/onlyoffice.png" /usr/share/pixmaps/onlyoffice.png
+    ln -fns "$upstream_dir/onlyoffice/onlyoffice.desktop" /usr/share/applications/onlyoffice.desktop
+    ln -fns "$upstream_dir/onlyoffice/onlyoffice" /usr/local/bin//onlyoffice
+
+    ;;
+  unconfigure)
+
+    rm -f /opt/onlyoffice
+    rm -f /usr/share/pixmaps/onlyoffice.png
+    rm -f /usr/share/applications/onlyoffice.desktop
+    rm -f /usr/local/bin//onlyoffice
+
+    ;;
+  unpack)
+    upstream_pack=$1
+    upstream_dir=$2
+
+    mkdir -p "$upstream_dir/onlyoffice"
+    cp  "$upstream_pack" "${upstream_dir}/onlyoffice/onlyoffice.AppImage"
+    chmod 755 "${upstream_dir}/onlyoffice/onlyoffice.AppImage"
+    cp  onlyoffice.png "$upstream_dir/onlyoffice/onlyoffice.png"
+    cp  onlyoffice.desktop "$upstream_dir/onlyoffice/onlyoffice.desktop"
+    cp  onlyoffice "$upstream_dir/onlyoffice/onlyoffice"
+    ;;
+  *)
+    ;;
+esac

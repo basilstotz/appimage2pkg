@@ -1,0 +1,39 @@
+#!/bin/sh
+
+set -eu
+
+command=$1
+shift
+
+case "$command" in
+  configure)
+    upstream_dir=$1
+    
+    ln -fns "$upstream_dir/xournalpp" /opt/xournalpp
+    ln -fns "$upstream_dir/xournalpp/xournalpp.png" /usr/share/pixmaps/xournalpp.png
+    ln -fns "$upstream_dir/xournalpp/xournalpp.desktop" /usr/share/applications/xournalpp.desktop
+    ln -fns "$upstream_dir/xournalpp/xournalpp" /usr/local/bin//xournalpp
+
+    ;;
+  unconfigure)
+
+    rm -f /opt/xournalpp
+    rm -f /usr/share/pixmaps/xournalpp.png
+    rm -f /usr/share/applications/xournalpp.desktop
+    rm -f /usr/local/bin//xournalpp
+
+    ;;
+  unpack)
+    upstream_pack=$1
+    upstream_dir=$2
+
+    mkdir -p "$upstream_dir/xournalpp"
+    cp  "$upstream_pack" "${upstream_dir}/xournalpp/xournalpp.AppImage"
+    chmod 755 "${upstream_dir}/xournalpp/xournalpp.AppImage"
+    cp  xournalpp.png "$upstream_dir/xournalpp/xournalpp.png"
+    cp  xournalpp.desktop "$upstream_dir/xournalpp/xournalpp.desktop"
+    cp  xournalpp "$upstream_dir/xournalpp/xournalpp"
+    ;;
+  *)
+    ;;
+esac

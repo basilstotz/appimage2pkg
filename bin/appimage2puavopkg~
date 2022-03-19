@@ -1,0 +1,194 @@
+#!/bin/sh
+
+url=$(cat "$1")
+pkg=$(basename -s .package "$1" )
+
+inst_dir="./puavo-pkg/"
+#inst_dir="."
+
+header=false
+
+get_latest_url(){
+
+    regex=$1
+    latest=
+
+    latest=$(echo "$regex" | sed -E "s@https://github.com/(.*)/releases/download/.*@https://api.github.com/\\1/releases/download/latest@")
+    wget -q "$latest"  -O - | grep -E "$regex" | cut -d'"' -f4
+}
+
+
+header(){
+    text=$1
+    if ! $header; then
+	touch changelog
+	echo ""                               >> changelog
+	echo "            === $text $pkg ===" >> changelog
+	echo "   Date: $(date)"               >> changelog
+	header=true
+    fi
+}
+
+
+if test -z "$url"; then
+    uhu=$(basename "$0")
+    echo "usage: $uhu  <URL> "
+    exit 1
+fi
+
+find_latest_url(){
+if echo "$url" | grep -q "https://github.com/*/releases/download/*\\**.AppImage"; then
+    url=$(get_latest_url "$url")
+    if test -n "$url"; then
+	echo "info: found latest \"$url\" on github"
+    else
+	echo "error: no url found on github"
+	exit 1
+    fi
+fi
+}
+
+if ! wget -q -O temp.AppImage "$url"; then
+    echo "error: could not downalosd $url"
+    exit 1
+fi
+chmod +x temp.AppImage
+
+
+shasum=$(sha384sum temp.AppImage|cut -d\  -f1)
+
+export APPIMAGELAUNCHER_DISABLE=true
+./temp.AppImage --appimage-extract  >/dev/null 2>&1
+find squashfs-root -name "*.desktop" -exec cp \{\} temp.desktop \;
+find squashfs-root -name "*.png" -exec cp \{\} temp.png \;
+rm -rf squashfs-root
+rm temp.AppImage
+
+if test -z "$pkg"; then
+    pkg=$(grep Name temp.desktop | cut -d= -f2| sed -e "s/ //g"|xargs|cut -d\  -f1)
+    #pkg=$(echo "$pkg" |sed -e "s/ //g") 
+fi
+
+echo ==================$pkg========================
+
+########################################################################################
+
+
+if test -d "$inst_dir/$pkg"; then
+    create=false
+else
+    create=true
+    mkdir -p "$inst_dir/$pkg"
+fi
+
+
+if "$create"; then
+ 
+    echo "info: initialise package"
+
+
+    header "New Package"
+    
+    touch "$inst_dir/$pkg/upstream_pack_sha384sum"
+    touch "$inst_dir/$pkg/upstream_pack_url"
+    
+    echo "Unknown" > "$inst_dir/$pkg/license"
+    grep Name temp.desktop| cut -d= -f2 > "$inst_dir/$pkg/legend"
+    grep Comment temp.desktop | cut -d= -f2 > "$inst_dir/$pkg/description"
+
+    #binary
+    cat <<EOF > temp.sh
+#!/bin/sh
+export APPIMAGELAUNCHER_DISABLE=true
+/opt/$pkg/$pkg.AppImage
+EOF
+    chmod +x temp.sh
+    mv temp.sh "$inst_dir/$pkg/$pkg"
+
+    #png
+    mv temp.png "$inst_dir/$pkg/$pkg.png"
+
+    # desktop
+    sed -i temp.desktop -e "s@Exec=.*@Exec=/usr/local/bin/$pkg@"
+    sed -i temp.desktop -e "s@Icon=.*@Icon=/usr/share/pixmaps/$pkg.png@"
+
+    #X-AppImage-Integrate=false
+
+    if grep -q  X-AppImage-Integrate temp.desktop; then
+	sed -i temp.desktop -e "s@X-AppImage-Integrate=.*@X-AppImage-Integrate=false@"
+    else
+	echo "X-AppImage-Integrate=false" >> temp.desktop
+    fi
+
+
+    mv temp.desktop "$inst_dir/$pkg/$pkg.desktop"
+
+    cat <<'EOF' > rules.temp
+#!/bin/sh
+
+set -eu
+
+command=$1
+shift
+
+case "$command" in
+  configure)
+    upstream_dir=$1
+    
+    ln -fns "$upstream_dir/%%pkg%%" /opt/%%pkg%%
+    ln -fns "$upstream_dir/%%pkg%%/%%pkg%%.png" /usr/share/pixmaps/%%pkg%%.png
+    ln -fns "$upstream_dir/%%pkg%%/%%pkg%%.desktop" /usr/share/applications/%%pkg%%.desktop
+    ln -fns "$upstream_dir/%%pkg%%/%%pkg%%" /usr/local/bin//%%pkg%%
+
+    ;;
+  unconfigure)
+
+    rm -f /opt/%%pkg%%
+    rm -f /usr/share/pixmaps/%%pkg%%.png
+    rm -f /usr/share/applications/%%pkg%%.desktop
+    rm -f /usr/local/bin//%%pkg%%
+
+    ;;
+  unpack)
+    upstream_pack=$1
+    upstream_dir=$2
+
+    mkdir -p "$upstream_dir/%%pkg%%"
+    cp  "$upstream_pack" "${upstream_dir}/%%pkg%%/%%pkg%%.AppImage"
+    chmod 755 "${upstream_dir}/%%pkg%%/%%pkg%%.AppImage"
+    cp  %%pkg%%.png "$upstream_dir/%%pkg%%/%%pkg%%.png"
+    cp  %%pkg%%.desktop "$upstream_dir/%%pkg%%/%%pkg%%.desktop"
+    cp  %%pkg%% "$upstream_dir/%%pkg%%/%%pkg%%"
+    ;;
+  *)
+    ;;
+esac
+EOF
+
+     sed -i rules.temp -e "s/%%pkg%%/$pkg/g"
+     chmod +x rules.temp
+     mv rules.temp "$inst_dir/$pkg/rules"
+fi
+
+
+old_url=$(cat "$inst_dir/$pkg/upstream_pack_url")
+if ! test "$url" = "$old_url"; then
+   header "Update Package"
+   echo  "    URL: $url" >> changelog
+   echo "info: updating upstream_pack_url"
+   echo "$url" > "$inst_dir/$pkg/upstream_pack_url"
+fi
+
+
+old_shasum=$(cat "$inst_dir/$pkg/upstream_pack_sha384sum")
+if ! test "$shasum" = "$old_shasum"; then
+   header "Update Package"
+   echo  " shasum: $shasum" >> changelog
+   echo "info: updating upstream_pack_sha384sum"
+   echo "$shasum" > "$inst_dir/$pkg/upstream_pack_sha384sum"
+fi
+
+
+exit 0
+    
+    

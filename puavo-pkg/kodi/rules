@@ -1,0 +1,39 @@
+#!/bin/sh
+
+set -eu
+
+command=$1
+shift
+
+case "$command" in
+  configure)
+    upstream_dir=$1
+    
+    ln -fns "$upstream_dir/kodi" /opt/kodi
+    ln -fns "$upstream_dir/kodi/kodi.png" /usr/share/pixmaps/kodi.png
+    ln -fns "$upstream_dir/kodi/kodi.desktop" /usr/share/applications/kodi.desktop
+    ln -fns "$upstream_dir/kodi/kodi" /usr/local/bin//kodi
+
+    ;;
+  unconfigure)
+
+    rm -f /opt/kodi
+    rm -f /usr/share/pixmaps/kodi.png
+    rm -f /usr/share/applications/kodi.desktop
+    rm -f /usr/local/bin//kodi
+
+    ;;
+  unpack)
+    upstream_pack=$1
+    upstream_dir=$2
+
+    mkdir -p "$upstream_dir/kodi"
+    cp  "$upstream_pack" "${upstream_dir}/kodi/kodi.AppImage"
+    chmod 755 "${upstream_dir}/kodi/kodi.AppImage"
+    cp  kodi.png "$upstream_dir/kodi/kodi.png"
+    cp  kodi.desktop "$upstream_dir/kodi/kodi.desktop"
+    cp  kodi "$upstream_dir/kodi/kodi"
+    ;;
+  *)
+    ;;
+esac

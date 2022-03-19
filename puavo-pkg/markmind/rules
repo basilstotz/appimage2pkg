@@ -1,0 +1,39 @@
+#!/bin/sh
+
+set -eu
+
+command=$1
+shift
+
+case "$command" in
+  configure)
+    upstream_dir=$1
+    
+    ln -fns "$upstream_dir/markmind" /opt/markmind
+    ln -fns "$upstream_dir/markmind/markmind.png" /usr/share/pixmaps/markmind.png
+    ln -fns "$upstream_dir/markmind/markmind.desktop" /usr/share/applications/markmind.desktop
+    ln -fns "$upstream_dir/markmind/markmind" /usr/local/bin//markmind
+
+    ;;
+  unconfigure)
+
+    rm -f /opt/markmind
+    rm -f /usr/share/pixmaps/markmind.png
+    rm -f /usr/share/applications/markmind.desktop
+    rm -f /usr/local/bin//markmind
+
+    ;;
+  unpack)
+    upstream_pack=$1
+    upstream_dir=$2
+
+    mkdir -p "$upstream_dir/markmind"
+    cp  "$upstream_pack" "${upstream_dir}/markmind/markmind.AppImage"
+    chmod 755 "${upstream_dir}/markmind/markmind.AppImage"
+    cp  markmind.png "$upstream_dir/markmind/markmind.png"
+    cp  markmind.desktop "$upstream_dir/markmind/markmind.desktop"
+    cp  markmind "$upstream_dir/markmind/markmind"
+    ;;
+  *)
+    ;;
+esac

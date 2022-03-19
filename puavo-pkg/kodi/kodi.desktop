@@ -1,0 +1,28 @@
+[Desktop Entry]
+Version=1.0
+Name=Kodi
+GenericName=Media Center
+GenericName[zh_CN]=媒体中心
+Comment=Manage and view your media
+Comment[ru]=Просмотр и управление мультимедиа
+Comment[zh_CN]=管理和查看您的媒体
+Exec=/usr/local/bin/kodi
+Icon=/usr/share/pixmaps/kodi.png
+Terminal=false
+Type=Application
+Categories=AudioVideo;Video;Player;TV;
+
+Actions=Fullscreen;Standalone;
+
+X-AppImage-Version=19.0+git20200820.0307.glibc2.17
+
+[Desktop Action Fullscreen]
+Name=Open in fullscreen
+Name[zh_CN]=全屏打开
+Exec=/usr/local/bin/kodi
+
+[Desktop Action Standalone]
+Name=Open in standalone mode
+Name[zh_CN]=在独立模式下打开
+Exec=/usr/local/bin/kodi
+X-AppImage-Integrate=false
