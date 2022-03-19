@@ -1,3 +1,3 @@
 .PHONY all:
 all:
-	@find . -name "*.package" -exec ./bin/appimage2puavopkg \{\} \;
+	@find packages -name "*.package" -exec ./bin/appimage2puavopkg \{\} \;
