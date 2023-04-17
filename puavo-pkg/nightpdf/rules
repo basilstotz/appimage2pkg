@@ -1,0 +1,39 @@
+#!/bin/sh
+
+set -eu
+
+command=$1
+shift
+
+case "$command" in
+  configure)
+    upstream_dir=$1
+    
+    ln -fns "$upstream_dir/nightpdf" /opt/nightpdf
+    ln -fns "$upstream_dir/nightpdf/nightpdf.png" /usr/share/pixmaps/nightpdf.png
+    ln -fns "$upstream_dir/nightpdf/nightpdf.desktop" /usr/share/applications/nightpdf.desktop
+    ln -fns "$upstream_dir/nightpdf/nightpdf" /usr/local/bin//nightpdf
+
+    ;;
+  unconfigure)
+
+    rm -f /opt/nightpdf
+    rm -f /usr/share/pixmaps/nightpdf.png
+    rm -f /usr/share/applications/nightpdf.desktop
+    rm -f /usr/local/bin//nightpdf
+
+    ;;
+  unpack)
+    upstream_pack=$1
+    upstream_dir=$2
+
+    mkdir -p "$upstream_dir/nightpdf"
+    cp  "$upstream_pack" "${upstream_dir}/nightpdf/nightpdf.AppImage"
+    chmod 755 "${upstream_dir}/nightpdf/nightpdf.AppImage"
+    cp  nightpdf.png "$upstream_dir/nightpdf/nightpdf.png"
+    cp  nightpdf.desktop "$upstream_dir/nightpdf/nightpdf.desktop"
+    cp  nightpdf "$upstream_dir/nightpdf/nightpdf"
+    ;;
+  *)
+    ;;
+esac

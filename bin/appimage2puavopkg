@@ -1,20 +1,57 @@
 #!/bin/sh
 
-url=$(cat "$1")
-pkg=$(basename -s .package "$1" )
+#url=$(cat "$1")
+#pkg=$(basename -s .package "$1" )
 
-inst_dir="./puavo-pkg/"
+#inst_dir="./puavo-pkg/"
 #inst_dir="."
 
-header=false
+#header=false
 
-get_latest_url(){
 
-    regex=$1
-    latest=
+#https://gist.github.com/lukechilds/a83e1d7127b78fef38c2914c4ececc3c
+#https://api.github.com/repos/$1/releases/latest
 
-    latest=$(echo "$regex" | sed -E "s@https://github.com/(.*)/releases/download/.*@https://api.github.com/\\1/releases/download/latest@")
-    wget -q "$latest"  -O - | grep -E "$regex" | cut -d'"' -f4
+
+help(){
+    echo "Usage: $(basename $0) [options] packagedir"
+    echo "    -u, --url <packageurl>"
+    echo "    -h, --help"
+    echo
+    exit 0
+}
+
+
+
+get_latest_release(){
+    uhu=""
+    if echo "$1"| grep -q -e "https://github.com/.*/releases/download/.*"; then
+	api=$(echo "$1" | sed -E "s@https://github.com/(.*)/releases/download/.*@https://api.github.com/repos/\\1/releases/latest@")
+	res=$(curl --silent "$api" | jq -r ".assets[].browser_download_url" 2>/dev/null | xargs)
+	if test -n "$res"; then
+		for r in $res; do
+		    if echo "$r" | grep -q -e ".*x86_64.*AppImage"; then
+			uhu="$r"
+			break
+		    fi
+		done
+		if test -z "$uhu"; then
+		    for r in $res; do
+			if echo "$r" | grep -q AppImage; then
+			    uhu="$r"
+			    break
+			fi
+		    done
+		fi	
+	fi
+	if test -n "$uhu"; then
+	    echo "$uhu"
+	else
+	    echo "$1"
+	fi
+    else
+	echo "$1"
+    fi
 }
 
 
@@ -23,31 +60,76 @@ header(){
     if ! $header; then
 	touch changelog
 	echo ""                               >> changelog
-	echo "            === $pkg ==="       >> changelog
+	echo "Package: $pkg"                  >> changelog
 	echo " Status: $text"                 >> changelog
 	echo "   Date: $(date)"               >> changelog
 	header=true
     fi
 }
 
+######################################################
 
-if test -z "$url"; then
-    uhu=$(basename "$0")
-    echo "usage: $uhu  <URL> "
-    exit 1
-fi
+url=""
 
-find_latest_url(){
-if echo "$url" | grep -q "https://github.com/*/releases/download/*\\**.AppImage"; then
-    url=$(get_latest_url "$url")
-    if test -n "$url"; then
-	echo "info: found latest \"$url\" on github"
-    else
-	echo "error: no url found on github"
+while [ $# -gt 0 ]; do
+    case $1 in
+        -h|--help)
+            shift
+            help
+            ;;
+         -u|--url)
+            shift
+            url=$1
+            shift
+            ;;
+        --)
+            shift
+            break
+            ;;
+        -*)
+            echo "error: invalid argument '$1'"
+            exit 1
+            ;;
+        *)
+            break
+            ;;
+    esac
+done
+
+# some paramter checks
+#if [ $# -ne 1 ]; then
+#    echo 
+#    echo "error: invalid number of arguments ($#), expected 1"
+#    help
+#    exit 1
+#fi
+
+inst_dir=$(realpath "$1")
+
+if ! test -d "$inst_dir/upstream_pack_url"; then
+    if test -z "$url"; then
+	echo "error: $inst_dir/upstream_pack_url does not exist and no url is given"
 	exit 1
     fi
+else
+    if test -z "$url"; then
+        url=$(cat "$inst_dir/upstream_pack_url")
+    fi
 fi
-}
+
+pkg=$(basename $inst_dir)
+
+echo $inst_dir
+echo $pkg
+echo $url
+
+
+#exit 
+
+#####################################################
+
+url=$(get_latest_release $url) 
+
 
 if ! wget -q -O temp.AppImage "$url"; then
     echo "error: could not downalosd $url"
@@ -58,29 +140,23 @@ chmod +x temp.AppImage
 
 shasum=$(sha384sum temp.AppImage|cut -d\  -f1)
 
-export APPIMAGELAUNCHER_DISABLE=true
-./temp.AppImage --appimage-extract  >/dev/null 2>&1
-find squashfs-root -name "*.desktop" -exec cp \{\} temp.desktop \;
-find squashfs-root -name "*.png" -exec cp \{\} temp.png \;
-rm -rf squashfs-root
-rm temp.AppImage
 
-if test -z "$pkg"; then
-    pkg=$(grep Name temp.desktop | cut -d= -f2| sed -e "s/ //g"|xargs|cut -d\  -f1)
-    #pkg=$(echo "$pkg" |sed -e "s/ //g") 
-fi
+#if test -z "$pkg"; then
+#    pkg=$(grep Name temp.desktop | cut -d= -f2| sed -e "s/ //g"|xargs|cut -d\  -f1)
+#    #pkg=$(echo "$pkg" |sed -e "s/ //g") 
+#fi
 
 echo ==================$pkg========================
 
 ########################################################################################
 
 
-if test -d "$inst_dir/$pkg"; then
+if test -f "$inst_dir/rules"; then
     create=false
 else
     create=true
-    mkdir -p "$inst_dir/$pkg"
 fi
+
 
 
 if "$create"; then
@@ -88,26 +164,36 @@ if "$create"; then
     echo "info: initialise package"
 
 
+    export APPIMAGELAUNCHER_DISABLE=true
+    ./temp.AppImage --appimage-extract  >/dev/null 2>&1
+    find squashfs-root -maxdepth 1 -name "*.desktop" -exec cp \{\} temp.desktop \;
+    find squashfs-root -maxdepth 1 -name "*.png" -exec cp \{\} temp.png \;
+    
+    mkdir -p "$inst_dir"
     header "New"
     
-    touch "$inst_dir/$pkg/upstream_pack_sha384sum"
-    touch "$inst_dir/$pkg/upstream_pack_url"
+    touch "$inst_dir/upstream_pack_sha384sum"
+    touch "$inst_dir/upstream_pack_url"
     
-    echo "Unknown" > "$inst_dir/$pkg/license"
-    grep Name temp.desktop| cut -d= -f2 > "$inst_dir/$pkg/legend"
-    grep Comment temp.desktop | cut -d= -f2 > "$inst_dir/$pkg/description"
+    echo "Unknown" > "$inst_dir/license"
+    grep Name temp.desktop| cut -d= -f2 > "$inst_dir/legend"
+    grep Comment temp.desktop | cut -d= -f2 > "$inst_dir/description"
+
+   test -d squashfs-root && rm -rf squashfs-root
 
     #binary
-    cat <<EOF > temp.sh
+    if ! test -f "$inst_dir/$pkg.png"; then
+	cat <<EOF > temp.sh
 #!/bin/sh
 export APPIMAGELAUNCHER_DISABLE=true
 /opt/$pkg/$pkg.AppImage
 EOF
-    chmod +x temp.sh
-    mv temp.sh "$inst_dir/$pkg/$pkg"
-
+	chmod +x temp.sh
+	mv temp.sh "$inst_dir/$pkg"
+    fi
+    
     #png
-    mv temp.png "$inst_dir/$pkg/$pkg.png"
+    mv temp.png "$inst_dir/$pkg.png"
 
     # desktop
     sed -i temp.desktop -e "s@Exec=.*@Exec=/usr/local/bin/$pkg@"
@@ -122,9 +208,10 @@ EOF
     fi
 
 
-    mv temp.desktop "$inst_dir/$pkg/$pkg.desktop"
+    mv temp.desktop "$inst_dir/$pkg.desktop"
 
-    cat <<'EOF' > rules.temp
+    if ! test -f "$inst_dir/rules"; then
+	cat <<'EOF' > rules.temp
 #!/bin/sh
 
 set -eu
@@ -166,27 +253,30 @@ case "$command" in
 esac
 EOF
 
-     sed -i rules.temp -e "s/%%pkg%%/$pkg/g"
-     chmod +x rules.temp
-     mv rules.temp "$inst_dir/$pkg/rules"
+	sed -i rules.temp -e "s/%%pkg%%/$pkg/g"
+	chmod +x rules.temp
+	mv rules.temp "$inst_dir/rules"
+    fi
 fi
 
+test -f temp.AppImage && rm temp.AppImage
 
-old_url=$(cat "$inst_dir/$pkg/upstream_pack_url")
+touch "$inst_dir/upstream_pack_url"
+old_url=$(cat "$inst_dir/upstream_pack_url")
 if ! test "$url" = "$old_url"; then
    header "Update"
    echo  "    URL: $url" >> changelog
    echo "info: updating upstream_pack_url"
-   echo "$url" > "$inst_dir/$pkg/upstream_pack_url"
+   echo "$url" > "$inst_dir/upstream_pack_url"
 fi
 
-
-old_shasum=$(cat "$inst_dir/$pkg/upstream_pack_sha384sum")
+touch "$inst_dir/upstream_pack_sha384sum"
+old_shasum=$(cat "$inst_dir/upstream_pack_sha384sum")
 if ! test "$shasum" = "$old_shasum"; then
    header "Update"
    echo  " shasum: $shasum" >> changelog
    echo "info: updating upstream_pack_sha384sum"
-   echo "$shasum" > "$inst_dir/$pkg/upstream_pack_sha384sum"
+   echo "$shasum" > "$inst_dir/upstream_pack_sha384sum"
 fi
 
 

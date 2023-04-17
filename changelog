@@ -27,3 +27,42 @@
    Date: Mo Feb 21 09:05:41 CET 2022
     URL: https://github.com/cmatomic/Appimage-002/releases/download/continuous/Kodi-19.0.git20200820.0307.glibc2.17-x86_64.AppImage
  shasum: 9e0ae88d435d8907b564906dd20d79487d3a098c9e7b4e6011915ffb50aaff1b311a9cda6733c30676fc9cacf7654b62
+
+            === onlyoffice ===
+ Status: Update
+   Date: Sa 15 Apr 2023 17:37:27 CEST
+ shasum: aa2031fb48be9978d66ce099d016eac9ce796cfdf12c3cf550ac8f79ab9b3c075fd322ef95fecb4e70fd7e7931401c26
+
+            === xournalpp ===
+ Status: Update
+   Date: So 16 Apr 2023 19:00:36 CEST
+    URL: https://github.com/xournalpp/xournalpp/releases/download/v1.1.3/xournalpp-1.1.3-x86_64.AppImage
+ shasum: e65cb340e80d0f1d7896594dfe1fcc77f06afd3873ea75459d9741d2881eed107a898129e7fa8a4969f5163bcf0d5011
+
+            === xournalpp ===
+ Status: New
+   Date: Mo 17 Apr 2023 09:17:47 CEST
+    URL: https://github.com/xournalpp/xournalpp/releases/download/v1.1.3/xournalpp-1.1.3-x86_64.AppImage
+ shasum: e65cb340e80d0f1d7896594dfe1fcc77f06afd3873ea75459d9741d2881eed107a898129e7fa8a4969f5163bcf0d5011
+
+            === onlyoffice ===
+ Status: New
+   Date: Mo 17 Apr 2023 09:18:13 CEST
+    URL: https://download.onlyoffice.com/install/desktop/editors/linux/DesktopEditors-x86_64.AppImage
+ shasum: aa2031fb48be9978d66ce099d016eac9ce796cfdf12c3cf550ac8f79ab9b3c075fd322ef95fecb4e70fd7e7931401c26
+
+            === markmind ===
+ Status: New
+   Date: Mo 17 Apr 2023 09:18:24 CEST
+    URL: https://github.com/MarkMindCkm/Mark-Mind/releases/download/v1.3.1/Mark.Mind-1.3.1.AppImage
+ shasum: d5448fab70e1c951d0a568098d26e5b89f1fc2ed6e278877f47bc09e1f46db74069b7425d969ea3ff14ab9dc6b4faf2f
+
+            === kodi ===
+ Status: New
+   Date: Mo 17 Apr 2023 09:18:47 CEST
+    URL: https://github.com/cmatomic/Appimage-002/releases/download/continuous/Kodi-19.0.git20200820.0307.glibc2.17-x86_64.AppImage
+ shasum: 9e0ae88d435d8907b564906dd20d79487d3a098c9e7b4e6011915ffb50aaff1b311a9cda6733c30676fc9cacf7654b62
+    URL: https://github.com/MarkMindCkm/Mark-Mind/releases/download/v1.3.1/Mark.Mind-1.3.1.AppImage
+ shasum: d5448fab70e1c951d0a568098d26e5b89f1fc2ed6e278877f47bc09e1f46db74069b7425d969ea3ff14ab9dc6b4faf2f
+    URL: https://github.com/MarkMindCkm/Mark-Mind/releases/download/v1.3.1/Mark.Mind-1.3.1.AppImage
+ shasum: d5448fab70e1c951d0a568098d26e5b89f1fc2ed6e278877f47bc09e1f46db74069b7425d969ea3ff14ab9dc6b4faf2f

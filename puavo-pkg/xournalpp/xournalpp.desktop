@@ -26,5 +26,5 @@ StartupNotify=true
 MimeType=application/x-xoj;application/x-xojpp;application/x-xopp;application/x-xopt;application/pdf;
 Icon=/usr/share/pixmaps/xournalpp.png
 Categories=Office;GNOME;GTK;
-X-AppImage-Version=1.1.1
+X-AppImage-Version=1.1.3
 X-AppImage-Integrate=false
