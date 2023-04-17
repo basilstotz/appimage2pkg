@@ -106,7 +106,7 @@ done
 
 inst_dir=$(realpath "$1")
 
-if ! test -d "$inst_dir/upstream_pack_url"; then
+if ! test -f "$inst_dir/upstream_pack_url"; then
     if test -z "$url"; then
 	echo "error: $inst_dir/upstream_pack_url does not exist and no url is given"
 	exit 1
